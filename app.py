@@ -14,7 +14,8 @@ def get_config(key: str, default: str = "") -> str:
     val = os.getenv(key)
     return val if val else default
 
-API_URL = get_config("API_URL", "http://localhost:8000/api/v1").rstrip("/")
+raw_api_url = get_config("API_URL", "https://ai-email-generator-api.onrender.com/api/v1").rstrip("/")
+API_URL = raw_api_url if raw_api_url.endswith("/api/v1") else f"{raw_api_url}/api/v1"
 API_KEY = get_config("API_KEY", "9fK-7xP2mQ8vL4nR6sT1yZ5cW0aB3dE7h")
 
 st.set_page_config(
@@ -62,7 +63,7 @@ if submit:
 
         with st.spinner("Generating email via REST API..."):
             try:
-                res = requests.post(endpoint, json=payload, headers=headers, timeout=30)
+                res = requests.post(endpoint, json=payload, headers=headers, timeout=(10, 45))
                 if res.status_code == 200:
                     data = res.json()
                     email_text = data.get("data", {}).get("email_text", "")
@@ -78,13 +79,15 @@ if submit:
                         err_detail = res.text
                     st.error(f"API Error ({res.status_code}): {err_msg}")
                     st.caption(f"Details: {err_detail}")
-            except requests.exceptions.ConnectionError:
-                st.warning("⚠️ FastAPI backend server is unreachable at " + endpoint)
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as net_err:
+                err_label = "timed out" if isinstance(net_err, requests.exceptions.Timeout) else "unreachable"
+                st.warning(f"⚠️ FastAPI backend server {err_label} at {endpoint}")
                 st.info("Falling back to local service execution...")
                 try:
                     from utils import getLLMResponse
 
                     response = getLLMResponse(form_input, email_sender, email_recipient, email_style)
+                    st.success("Email generated successfully!")
                     st.write(response)
                 except Exception as ex:
                     st.error(f"Fallback generation failed: {str(ex)}")
