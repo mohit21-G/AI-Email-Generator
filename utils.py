@@ -8,11 +8,12 @@ load_dotenv()
 def _get_cohere_key():
     try:
         import streamlit as st
-        if "COHERE_API_KEY" in st.secrets and st.secrets["COHERE_API_KEY"]:
-            return str(st.secrets["COHERE_API_KEY"])
+        for key in ("COHERE_API_KEY", "CO_API_KEY"):
+            if key in st.secrets and st.secrets[key]:
+                return str(st.secrets[key])
     except Exception:
         pass
-    return os.getenv("COHERE_API_KEY")
+    return os.getenv("COHERE_API_KEY") or os.getenv("CO_API_KEY")
 
 
 def getLLMResponse(form_input, email_sender, email_recipient, email_style):
