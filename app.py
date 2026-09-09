@@ -5,8 +5,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_URL = os.getenv("API_URL", "http://localhost:8000/api/v1").rstrip("/")
-API_KEY = os.getenv("API_KEY", "email-gen-secret-key-2026")
+def get_config(key: str, default: str = "") -> str:
+    try:
+        if key in st.secrets and st.secrets[key]:
+            return str(st.secrets[key])
+    except Exception:
+        pass
+    val = os.getenv(key)
+    return val if val else default
+
+API_URL = get_config("API_URL", "http://localhost:8000/api/v1").rstrip("/")
+API_KEY = get_config("API_KEY", "9fK-7xP2mQ8vL4nR6sT1yZ5cW0aB3dE7h")
 
 st.set_page_config(
     page_title="Generate Emails",
