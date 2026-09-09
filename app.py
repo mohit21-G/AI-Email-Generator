@@ -61,7 +61,7 @@ if submit:
             "style": email_style,
         }
 
-        with st.spinner("Generating email via REST API..."):
+        with st.spinner("Generating email..."):
             try:
                 res = requests.post(endpoint, json=payload, headers=headers, timeout=(10, 45))
                 if res.status_code == 200:
